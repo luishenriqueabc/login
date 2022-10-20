@@ -1,22 +1,23 @@
 <?php 
-class Login{
+class User{
     public $id;
+    public $name;
     public $email;
-    public $senha;
-    
-
-    function __construct($id, $email, $senha) {
+    public $pass;
+    function __construct($id, $name, $email, $pass) {
         $this->id = $id;
+        $this->name = $name;
         $this->email = $email;
-        $this->senha = $senha;
+        $this->pass = $pass;
     }
     function create(){
         $db = new Database();
         try {
-            $stmt = $db->conn->prepare("INSERT INTO login (email, senha)
-            VALUES (:email, :senha);");
+            $stmt = $db->conn->prepare("INSERT INTO users (name, email, pass, roles)
+            VALUES (:name, :email, :pass, 'client');");
+            $stmt->bindParam(':name', $this->name);
             $stmt->bindParam(':email', $this->email);
-            $stmt->bindParam(':senha', $this->senha);
+            $stmt->bindParam(':pass', $this->pass);
             $stmt->execute();
             $id = $db->conn->lastInsertId();
             return $id;
@@ -29,7 +30,7 @@ class Login{
     function delete(){
         $db = new Database();
         try {
-            $stmt = $db->conn->prepare("DELETE FROM login WHERE id = :id;");
+            $stmt = $db->conn->prepare("DELETE FROM users WHERE id = :id;");
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             return $stmt->rowCount();
@@ -42,10 +43,11 @@ class Login{
     function update(){
         $db = new Database();
         try {
-            $stmt = $db->conn->prepare("UPDATE login SET email = :email, senha = :senha WHERE id = :id;");
+            $stmt = $db->conn->prepare("UPDATE users SET name = :name, email = :email, pass = :pass WHERE id = :id;");
             $stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':name', $this->name);
             $stmt->bindParam(':email', $this->email);
-            $stmt->bindParam(':senha', $this->senha);
+            $stmt->bindParam(':pass', $this->pass);
             $stmt->execute();
             return true;
         }catch(PDOException $e) {
@@ -54,11 +56,10 @@ class Login{
             $response->out($result, 500);
         }
     }
-
     function selectAll(){
         $db = new Database();
         try {
-            $stmt = $db->conn->prepare("SELECT id,email FROM login;");
+            $stmt = $db->conn->prepare("SELECT id, name, email FROM users;");
             $stmt->execute();
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $result;
@@ -72,7 +73,7 @@ class Login{
     function selectById(){
         $db = new Database();
         try {
-            $stmt = $db->conn->prepare("SELECT id,email FROM login WHERE id = :id;");
+            $stmt = $db->conn->prepare("SELECT id, name, email FROM users WHERE id = :id;");
             $stmt->bindParam(':id', $this->id);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -87,10 +88,9 @@ class Login{
     function login(){
         $db = new Database();
         try {
-            $stmt = $db->conn->prepare("SELECT id, email FROM login WHERE email = :email AND senha = :senha;");
+            $stmt = $db->conn->prepare("SELECT id, name, email, roles FROM users WHERE email = :email AND pass = :pass; ");
             $stmt->bindParam(':email', $this->email);
-            $stmt->bindParam(':senha', $this->senha);
-            $stmt->bindParam(':tipo', $this->tipo);
+            $stmt->bindParam(':pass', $this->pass);
             $stmt->execute();
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             return $result;
